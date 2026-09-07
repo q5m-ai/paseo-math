@@ -1,0 +1,42 @@
+{
+  "name": "@q5m-ai/paseo-math",
+  "version": "0.1.0-beta.1",
+  "private": true,
+  "description": "Cross-platform LaTeX timeline rendering for Paseo 0.8",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": "github:q5m-ai/paseo-math",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "sdk": "node scripts/sdk.mjs",
+    "smoke": "node --import tsx scripts/smoke.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
+    "markdown-it": "15.0.1",
+    "mathjax-full": "3.2.2",
+    "react-native-markdown-display": "7.0.2"
+  },
+  "overrides": {
+    "react-native-markdown-display": {
+      "markdown-it": "$markdown-it"
+    },
+    "@xmldom/xmldom": "0.9.12"
+  },
+  "devDependencies": {
+    "@getpaseo/plugin": "0.7.2",
+    "@types/node": "^22.0.0",
+    "@types/react": "~19.2.0",
+    "esbuild": "^0.25.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-web": "0.21.2",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0",
+    "zod": "4.4.3"
+  }
+}

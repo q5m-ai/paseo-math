@@ -1,0 +1,16 @@
+paseo-math
+Copyright 2026 q5m-ai contributors
+
+The Markdown math parser draws on the public Paseo LaTeX proposal:
+https://github.com/getpaseo/paseo/pull/2562
+https://github.com/ekalvi/paseo/tree/e784d3b91a63add5a8fa3889e282d35da86e7c78
+Paseo is Copyright 2025-present Mohamed Boudra, Apache-2.0.
+
+The build-time stable Markdown node-key adaptation follows:
+https://github.com/getpaseo/paseo/blob/c43df5d4c398571f62584b4ad5a629b5fd3b4599/patches/react-native-markdown-display%2B7.0.2.patch
+
+Runtime dependency licenses remain in their npm packages and generated bundles:
+react-native-markdown-display (MIT), markdown-it (MIT), MathJax (Apache-2.0),
+resvg (MPL-2.0), and their respective dependencies. The unmodified resvg WASM
+binary is embedded during installation; its source is available at
+https://github.com/thx/resvg-js/tree/v2.6.2 and https://github.com/linebender/resvg.
