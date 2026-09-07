@@ -54,23 +54,15 @@ export const Formula = memo(function Formula({
   useEffect(() => {
     if (!eligible) return;
     let current = true;
-    // Assistant phase is not a finality signal in the host. Debounce actual
-    // expression changes, and never allow an old request to paint a new token.
-    const timer = setTimeout(
-      () => {
-        void requestRender(
-          key,
-          { expression, display, color },
-          callRef.current,
-        ).then((next) => {
-          if (current) setSettled({ key, result: next });
-        });
-      },
-      cached !== undefined ? 0 : 100,
-    );
+    void requestRender(
+      key,
+      { expression, display, color },
+      callRef.current,
+    ).then((next) => {
+      if (current) setSettled({ key, result: next });
+    });
     return () => {
       current = false;
-      clearTimeout(timer);
     };
   }, [key, expression, display, color, eligible]);
 

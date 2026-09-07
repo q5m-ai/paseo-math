@@ -1,24 +1,27 @@
-import type { PluginClientContext } from "@getpaseo/plugin";
+import type { PluginContext } from "@getpaseo/plugin";
 import { MathMessageView } from "./client/math-message.js";
 import { hasMath } from "./client/generated/markdown.js";
 import { mathMessageSchema } from "./shared/message.js";
+import { renderMath } from "./shared/render.js";
+import { renderFormula } from "./server/render.js";
 
-export default function setup(client: PluginClientContext) {
+export default function setup(plugin: PluginContext) {
+  plugin.handle(renderMath, renderFormula);
   const objects = new WeakMap<object, { text: string; result: boolean }>();
   // Projection may clone settled items. Bound retained source while avoiding
   // reparsing those clones on every unrelated transcript/composer update.
   const sources = new Map<string, boolean>();
   let sourceCharacters = 0;
-  const removeRenderer = client.addTimelineRenderer({
+  plugin.addTimelineRenderer({
     kind: "math-message",
     version: 1,
     schema: mathMessageSchema,
     Component: MathMessageView,
   });
-  const removeTransformer = client.addTimelineTransformer({
+  plugin.addTimelineTransformer({
     id: "assistant-math",
     query: { itemType: "assistant_message" },
-    transform({ item, phase }) {
+    transform({ item }) {
       const remembered = objects.get(item);
       let result =
         remembered?.text === item.text
@@ -44,15 +47,14 @@ export default function setup(client: PluginClientContext) {
             type: "plugin",
             kind: "math-message",
             version: 1,
-            data: { text: item.text, phase },
+            data: { text: item.text },
           },
         ],
       };
     },
   });
   return () => {
-    removeTransformer();
-    removeRenderer();
     sources.clear();
+    sourceCharacters = 0;
   };
 }

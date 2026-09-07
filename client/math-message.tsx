@@ -1,7 +1,8 @@
 import type { PluginTimelineItemProps } from "@getpaseo/plugin";
-import { copyText, useToast } from "@getpaseo/plugin/react-native";
+import { useToast } from "@getpaseo/plugin/react-native";
 import { memo, useCallback, useMemo, useState } from "react";
 import {
+  Clipboard,
   Linking,
   Platform,
   Pressable,
@@ -42,7 +43,11 @@ function colorHex(color: TextStyle["color"], fallback: string): string {
   return `#${(value & 0xffffff).toString(16).padStart(6, "0")}${(value >>> 24).toString(16).padStart(2, "0")}`;
 }
 
-export const MathMessageView = memo(
+export function MathMessageView(props: PluginTimelineItemProps<MathMessage>) {
+  return <MemoizedMathMessage {...props} />;
+}
+
+const MemoizedMathMessage = memo(
   function MathMessageView({
     item,
     host,
@@ -222,11 +227,31 @@ export const MathMessageView = memo(
       [toast],
     );
 
-    const copyOriginal = useCallback(() => {
-      void copyText(text).then(
-        () => toast.show("Original message copied", { variant: "success" }),
-        () => toast.error("Unable to copy the message."),
-      );
+    const copyOriginal = useCallback(async () => {
+      try {
+        const navigator =
+          "navigator" in globalThis ? globalThis.navigator : undefined;
+        const clipboard =
+          navigator && "clipboard" in navigator
+            ? navigator.clipboard
+            : undefined;
+        if (
+          Platform.OS === "web" &&
+          clipboard &&
+          typeof clipboard === "object" &&
+          "writeText" in clipboard &&
+          typeof clipboard.writeText === "function"
+        ) {
+          await clipboard.writeText(text);
+        } else {
+          // The 0.7.2 host exposes React Native's legacy clipboard, not expo-clipboard.
+          const copied: unknown = Clipboard.setString(text);
+          if (copied === false) throw new Error("Clipboard is unavailable");
+        }
+        toast.show("Original message copied", { variant: "success" });
+      } catch {
+        toast.error("Unable to copy the message.");
+      }
     }, [text, toast]);
 
     return (

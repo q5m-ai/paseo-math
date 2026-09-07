@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { access } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-export const revision = "c43df5d4c398571f62584b4ad5a629b5fd3b4599";
+export const revision = "9400a49af670fdb5db4af58e73f8df98588dbea9";
 const source = fileURLToPath(new URL("../.paseo-sdk", import.meta.url));
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, stdio: "inherit" });
@@ -49,6 +49,4 @@ run(
 );
 run("npm", ["run", "build:client"], source);
 run("npm", ["run", "build:plugin"], source);
-console.log(
-  `Built genuine Paseo SDK declarations at ${revision}. Registry 0.7.2 is not this API.`,
-);
+console.log(`Built genuine Paseo 0.7.2 SDK declarations at ${revision}.`);

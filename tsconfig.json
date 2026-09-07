@@ -9,19 +9,10 @@
     "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node", "react"],
-    "paths": {
-      "@getpaseo/plugin": ["./.paseo-sdk/packages/plugin/dist/index.d.ts"],
-      "@getpaseo/plugin/*": ["./.paseo-sdk/packages/plugin/dist/*.d.ts"],
-      "@getpaseo/client": ["./.paseo-sdk/packages/client/dist/index.d.ts"],
-      "@getpaseo/client/*": ["./.paseo-sdk/packages/client/dist/*.d.ts"],
-      "@getpaseo/protocol": ["./.paseo-sdk/packages/protocol/dist/index.d.ts"],
-      "@getpaseo/protocol/*": ["./.paseo-sdk/packages/protocol/dist/*.d.ts"]
-    }
+    "types": ["node", "react"]
   },
   "include": [
-    "index.client.tsx",
-    "index.server.ts",
+    "index.ts",
     "client/**/*.ts",
     "client/**/*.tsx",
     "shared/**/*.ts",
