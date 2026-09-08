@@ -10,6 +10,7 @@
     "build": "node scripts/build.mjs",
     "sdk": "node scripts/sdk.mjs",
     "smoke": "node --import tsx scripts/smoke.mjs",
+    "smoke:hermes": "node --import tsx scripts/hermes-smoke.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -26,6 +27,8 @@
     "@xmldom/xmldom": "0.9.12"
   },
   "devDependencies": {
+    "@babel/core": "7.29.0",
+    "@babel/plugin-transform-classes": "7.28.6",
     "@getpaseo/plugin": "0.8.0-beta.1",
     "@types/node": "^22.0.0",
     "@types/react": "~19.2.0",

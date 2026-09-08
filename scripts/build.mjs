@@ -1,4 +1,6 @@
 import { build } from "esbuild";
+import { transformAsync } from "@babel/core";
+import transformClasses from "@babel/plugin-transform-classes";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -9,11 +11,7 @@ const require = createRequire(import.meta.url);
 const markdownRoot = path.dirname(
   require.resolve("react-native-markdown-display/package.json"),
 );
-const markdownItEntry = path.join(
-  path.dirname(require.resolve("markdown-it/package.json")),
-  "dist/markdown-it.mjs",
-);
-const entitiesDecodeEntry = require.resolve("entities/decode");
+
 await mkdir(path.join(root, "client/generated"), { recursive: true });
 await mkdir(path.join(root, "server/generated"), { recursive: true });
 
@@ -50,46 +48,6 @@ await build({
     {
       name: "stable-markdown-keys",
       setup(context) {
-        context.onLoad(
-          { filter: /entities\/dist\/decode\.js$/ },
-          async ({ path: filename }) => {
-            if (filename !== entitiesDecodeEntry) return;
-            let source = await readFile(filename, "utf8");
-            source = replaceExact(
-              source,
-              "function getDecoder(decodeTree) {",
-              "function getDecoder(decodeTree, Decoder) {",
-            );
-            source = replaceExact(
-              source,
-              "new EntityDecoder(decodeTree,",
-              "new Decoder(decodeTree,",
-            );
-            source = replaceExact(
-              source,
-              "getDecoder(htmlDecodeTree);",
-              "getDecoder(htmlDecodeTree, EntityDecoder);",
-            );
-            source = replaceExact(
-              source,
-              "getDecoder(xmlDecodeTree);",
-              "getDecoder(xmlDecodeTree, EntityDecoder);",
-            );
-            return { contents: source, loader: "js" };
-          },
-        );
-        context.onLoad(
-          { filter: /markdown-it\.mjs$/ },
-          async ({ path: filename }) => {
-            if (filename !== markdownItEntry) return;
-            const source = replaceExact(
-              await readFile(filename, "utf8"),
-              "var MarkdownItCallable = callable(MarkdownIt);",
-              "var MarkdownItCallable = MarkdownIt;",
-            );
-            return { contents: source, loader: "js" };
-          },
-        );
         context.onLoad(
           { filter: /(?:AstRenderer|tokensToAST)\.js$/ },
           async ({ path: filename }) => {
@@ -150,6 +108,18 @@ await build({
     },
   ],
 });
+// Hermes' runtime eval class transform fails on this bundled dependency graph.
+// Lower classes before Paseo's second compilation, rather than relying on eval
+// to transform them on the phone. Keep all other syntax and ESM exports intact.
+const markdownFile = path.join(root, "client/generated/markdown.js");
+const lowered = await transformAsync(await readFile(markdownFile, "utf8"), {
+  filename: markdownFile,
+  babelrc: false,
+  configFile: false,
+  plugins: [transformClasses],
+});
+if (!lowered?.code) throw new Error("Markdown class lowering produced no code");
+await writeFile(markdownFile, lowered.code + "\n");
 // The pinned renderer's declarations still import Markdown 10's private Token
 // path. Keep its real types, adapted to the public Markdown 15 export, alongside
 // the portable bundle. Do not modify installed dependency files.
