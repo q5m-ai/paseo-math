@@ -120,6 +120,6 @@ $$
 
 ## Copying and rendering limits
 
-- **Copy source** copies the original source supplied to that plugin item. Paseo can split a response into native Markdown blocks, so this is not a guarantee of copying the entire assistant turn; multiple copy actions can appear in one response.
+- The upper-right copy icon (**Copy source** for screen readers) copies the original source supplied to that plugin item. Paseo can split a response into native Markdown blocks, so this is not a guarantee of copying the entire assistant turn; multiple copy actions can appear in one response.
 - Invalid or oversized formulas fall back to source rather than replacing the response with a rendering error.
 - Plugin startup on a host does not prove that every connected client can render it. Check the client version and the plugin's status in that client when diagnosing missing math.
