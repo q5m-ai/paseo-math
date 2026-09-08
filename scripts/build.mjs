@@ -13,6 +13,7 @@ const markdownItEntry = path.join(
   path.dirname(require.resolve("markdown-it/package.json")),
   "dist/markdown-it.mjs",
 );
+const entitiesDecodeEntry = require.resolve("entities/decode");
 await mkdir(path.join(root, "client/generated"), { recursive: true });
 await mkdir(path.join(root, "server/generated"), { recursive: true });
 
@@ -49,6 +50,34 @@ await build({
     {
       name: "stable-markdown-keys",
       setup(context) {
+        context.onLoad(
+          { filter: /entities\/dist\/decode\.js$/ },
+          async ({ path: filename }) => {
+            if (filename !== entitiesDecodeEntry) return;
+            let source = await readFile(filename, "utf8");
+            source = replaceExact(
+              source,
+              "function getDecoder(decodeTree) {",
+              "function getDecoder(decodeTree, Decoder) {",
+            );
+            source = replaceExact(
+              source,
+              "new EntityDecoder(decodeTree,",
+              "new Decoder(decodeTree,",
+            );
+            source = replaceExact(
+              source,
+              "getDecoder(htmlDecodeTree);",
+              "getDecoder(htmlDecodeTree, EntityDecoder);",
+            );
+            source = replaceExact(
+              source,
+              "getDecoder(xmlDecodeTree);",
+              "getDecoder(xmlDecodeTree, EntityDecoder);",
+            );
+            return { contents: source, loader: "js" };
+          },
+        );
         context.onLoad(
           { filter: /markdown-it\.mjs$/ },
           async ({ path: filename }) => {

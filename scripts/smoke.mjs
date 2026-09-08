@@ -278,6 +278,11 @@ async function exerciseClientBundle(bundle, id) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const plugin = await loadCompiledPlugin();
   try {
+    assert.match(
+      plugin.bundles.clientBundle,
+      /getDecoder\(htmlDecodeTree, EntityDecoder\)/,
+      "The Android bundle must pass EntityDecoder across Paseo's hoisted module boundary",
+    );
     const streaming = await exerciseClientBundle(
       plugin.bundles.clientBundle,
       plugin.id,
