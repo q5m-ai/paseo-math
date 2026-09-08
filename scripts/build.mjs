@@ -9,7 +9,6 @@ const require = createRequire(import.meta.url);
 const markdownRoot = path.dirname(
   require.resolve("react-native-markdown-display/package.json"),
 );
-const fitImagePath = require.resolve("react-native-fit-image");
 await mkdir(path.join(root, "client/generated"), { recursive: true });
 await mkdir(path.join(root, "server/generated"), { recursive: true });
 
@@ -34,6 +33,7 @@ await build({
   mainFields: ["module", "main"],
   alias: {
     "markdown-it": path.dirname(require.resolve("markdown-it/package.json")),
+    "react-native-fit-image": path.join(root, "client/fit-image.ts"),
   },
   target: "es2020",
   define: { "process.env.NODE_ENV": '"production"' },
@@ -45,21 +45,6 @@ await build({
     {
       name: "stable-markdown-keys",
       setup(context) {
-        context.onLoad(
-          { filter: /FitImage\.js$/ },
-          async ({ path: filename }) => {
-            if (filename !== fitImagePath) return;
-            let source = await readFile(filename, "utf8");
-            // This legacy CommonJS module receives Metro's React namespace on
-            // Android, where the actual React object is under `default`.
-            source = replaceExact(
-              source,
-              'var React = require("react");\nvar react_1 = require("react");',
-              'var ReactModule = require("react");\nvar React = ReactModule.default || ReactModule;\nvar react_1 = React;',
-            );
-            return { contents: source, loader: "js" };
-          },
-        );
         context.onLoad(
           { filter: /(?:AstRenderer|tokensToAST)\.js$/ },
           async ({ path: filename }) => {
