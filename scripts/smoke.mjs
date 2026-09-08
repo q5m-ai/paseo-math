@@ -112,8 +112,13 @@ async function exerciseClientBundle(bundle, id) {
     if (name === "@getpaseo/plugin/client") return clientSdk;
     if (name === "@getpaseo/plugin/client/react-native") return nativeSdk;
     if (name === "react-native") return require("react-native-web");
-    if (name === "react" || name === "react/jsx-runtime" || name === "zod")
-      return require(name);
+    if (name === "react") {
+      const react = require("react");
+      // Metro exposes this namespace shape to evaluated Android plugin bundles.
+      // Legacy CommonJS dependencies must tolerate Component under default.
+      return { ...react, Component: undefined, default: react };
+    }
+    if (name === "react/jsx-runtime" || name === "zod") return require(name);
     throw new Error(`Module "${name}" is not available in this client smoke`);
   });
   const cleanup = entry.default({
