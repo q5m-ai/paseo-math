@@ -8,6 +8,7 @@ import type { LiteElement } from "mathjax-full/js/adaptors/lite/Element.js";
 import type { MmlNode } from "mathjax-full/js/core/MmlTree/MmlNode.js";
 import type TexError from "mathjax-full/js/input/tex/TexError.js";
 import "mathjax-full/js/input/tex/ams/AmsConfiguration.js";
+import "mathjax-full/js/input/tex/boldsymbol/BoldsymbolConfiguration.js";
 import "mathjax-full/js/input/tex/newcommand/NewcommandConfiguration.js";
 import "mathjax-full/js/input/tex/configmacros/ConfigMacrosConfiguration.js";
 import "mathjax-full/js/input/tex/verb/VerbConfiguration.js";
@@ -136,6 +137,7 @@ function typeset(input: RenderInput): {
     packages: [
       "base",
       "ams",
+      "boldsymbol",
       "newcommand",
       "configmacros",
       "verb",

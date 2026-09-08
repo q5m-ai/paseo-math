@@ -124,6 +124,23 @@ describe("local math rasterization", () => {
     expect(second.png).toBe((await render("b")).png);
   });
 
+  it("renders bold vectors in a full aligned Fourier transform", async () => {
+    const result = await render(
+      String.raw`\boxed{
+\begin{aligned}
+\widehat f(\boldsymbol\xi)
+&=\int_{\mathbb R^n} f(\mathbf x)e^{-2\pi i\mathbf x\cdot\boldsymbol\xi}\,d^n\mathbf x,\\
+f(\mathbf x)
+&=\int_{\mathbb R^n} \widehat f(\boldsymbol\xi)e^{2\pi i\mathbf x\cdot\boldsymbol\xi}\,d^n\boldsymbol\xi.
+\end{aligned}
+}`,
+      true,
+    );
+    expect(result.width).toBeGreaterThan(150);
+    expect(result.height).toBeGreaterThan(30);
+    expect(inkCount(pixels(result).rgba)).toBeGreaterThan(1_000);
+  });
+
   it("renders standalone AMS equation tags as compact display geometry", async () => {
     const tagged = await render(
       String.raw`u_{2n+\varepsilon}=i^\varepsilon u_n,\qquad z_{2n+\varepsilon}=(1+i)z_n+\varepsilon u_n.\tag{1}`,
