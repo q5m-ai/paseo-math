@@ -4,7 +4,7 @@ Markdown and LaTeX rendering for math-bearing assistant responses in Paseo, with
 
 ## Compatibility
 
-Use **Paseo 0.8 on both the host daemon and the client app**. The current plugin release, `v0.1.0-beta.3`, targets the 0.8 API and was validated against `0.8.0-beta.1`.
+Use **Paseo `0.8.0-beta.1` or later in the 0.8 series on both the host daemon and the client app**. The current plugin release, `v0.1.0-beta.3`, was validated against `0.8.0-beta.1`.
 
 Upgrading a host does not upgrade its Android, desktop, or other client apps. A Paseo `0.7.2` client cannot load the current plugin and can report:
 
@@ -20,25 +20,20 @@ For a host and client still on Paseo `0.7.2`, use [Math `v0.1.0-beta.2`](https:/
 
 Plugins are trusted code: they execute on the host and inside the client app without sandboxing. Install only code you trust.
 
-On the Paseo host, clone and build the release:
+You need Git, Node.js **22.22 or newer**, npm, and the **Paseo 0.8 CLI** on the host, with its Paseo daemon running.
 
-```sh
-git clone --branch v0.1.0-beta.3 --depth 1 https://github.com/q5m-ai/paseo-math.git
-cd paseo-math
-npm ci
-npm run build
-pwd
-```
+1. In the app, select the host where your agent runs, open **Settings → Plugins**, and turn on **Enable plugins**.
+2. In a terminal on that host, run:
 
-In the client app:
+   ```sh
+   paseo plugin install https://github.com/q5m-ai/paseo-math.git --ref v0.1.0-beta.3
+   paseo plugin ls
+   ```
 
-1. Open **Settings → Plugins** for the host where the agent runs.
-2. Turn on **Enable plugins**.
-3. Enter the absolute host directory printed by `pwd` in **Plugin directory**.
-4. Leave **Plugin installation ID** blank to use the manifest's `q5m-math` ID.
-5. Select **Install directory**.
+   Use your usual authenticated Paseo connection if the host requires a password. Paseo clones the pinned release and runs its dependency installation and build automatically—no manual clone, build, or directory entry is needed.
+3. Confirm `q5m-math` is **running**, then ask an agent on that host for a math response.
 
-Installation is per host, not per agent. If `q5m-math` is already installed and enabled on that host, do not add it again on each client. A compatible client loads the host's plugin catalog when it connects. After updating the client, reconnect and use **Reload** on the plugin if needed.
+Install once per host, not per agent or phone. If `q5m-math` is already installed and enabled, skip installation. After updating the client app, reconnect and use **Reload** on the plugin if needed.
 
 ## Writing math
 
