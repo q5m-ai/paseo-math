@@ -12,7 +12,8 @@
     "types": ["node", "react"]
   },
   "include": [
-    "index.ts",
+    "index.client.tsx",
+    "index.server.ts",
     "client/**/*.ts",
     "client/**/*.tsx",
     "shared/**/*.ts",

@@ -104,9 +104,20 @@ await build({
     },
   ],
 });
+// The pinned renderer's declarations still import Markdown 10's private Token
+// path. Keep its real types, adapted to the public Markdown 15 export, alongside
+// the portable bundle. Do not modify installed dependency files.
+await writeFile(
+  path.join(root, "client/generated/markdown-types.d.ts"),
+  replaceExact(
+    await readFile(path.join(markdownRoot, "src/index.d.ts"), "utf8"),
+    "import Token from 'markdown-it/lib/token';",
+    "import type { Token } from 'markdown-it';",
+  ),
+);
 await writeFile(
   path.join(root, "client/generated/markdown.d.ts"),
-  'export { default } from "react-native-markdown-display";\nexport type { ASTNode, RenderFunction, RenderRules } from "react-native-markdown-display";\nexport { default as MarkdownIt } from "markdown-it";\nexport { markdownMath, hasMath } from "../../shared/markdown-math.js";\n',
+  'export { default } from "./markdown-types.js";\nexport type { ASTNode, RenderFunction, RenderRules } from "./markdown-types.js";\nexport { default as MarkdownIt } from "markdown-it";\nexport { markdownMath, hasMath } from "../../shared/markdown-math.js";\n',
 );
 const wasm = await readFile(require.resolve("@resvg/resvg-wasm/index_bg.wasm"));
 await writeFile(

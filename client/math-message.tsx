@@ -1,8 +1,7 @@
-import type { PluginTimelineItemProps } from "@getpaseo/plugin";
-import { useToast } from "@getpaseo/plugin/react-native";
+import type { PluginTimelineItemProps } from "@getpaseo/plugin/client";
+import { copyText, useToast } from "@getpaseo/plugin/client/react-native";
 import { memo, useCallback, useMemo, useState } from "react";
 import {
-  Clipboard,
   Linking,
   Platform,
   Pressable,
@@ -227,30 +226,12 @@ const MemoizedMathMessage = memo(
       [toast],
     );
 
-    const copyOriginal = useCallback(async () => {
+    const copySource = useCallback(async () => {
       try {
-        const navigator =
-          "navigator" in globalThis ? globalThis.navigator : undefined;
-        const clipboard =
-          navigator && "clipboard" in navigator
-            ? navigator.clipboard
-            : undefined;
-        if (
-          Platform.OS === "web" &&
-          clipboard &&
-          typeof clipboard === "object" &&
-          "writeText" in clipboard &&
-          typeof clipboard.writeText === "function"
-        ) {
-          await clipboard.writeText(text);
-        } else {
-          // The 0.7.2 host exposes React Native's legacy clipboard, not expo-clipboard.
-          const copied: unknown = Clipboard.setString(text);
-          if (copied === false) throw new Error("Clipboard is unavailable");
-        }
-        toast.show("Original message copied", { variant: "success" });
+        await copyText(text);
+        toast.show("Source copied", { variant: "success" });
       } catch {
-        toast.error("Unable to copy the message.");
+        toast.error("Unable to copy the source.");
       }
     }, [text, toast]);
 
@@ -269,8 +250,8 @@ const MemoizedMathMessage = memo(
         </Markdown>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Copy original message"
-          onPress={copyOriginal}
+          accessibilityLabel="Copy source"
+          onPress={copySource}
           style={{
             alignSelf: "flex-start",
             paddingVertical: 8,
@@ -285,7 +266,7 @@ const MemoizedMathMessage = memo(
               fontSize: layout.compact ? 12 : 13,
             }}
           >
-            Copy original message
+            Copy source
           </Text>
         </Pressable>
       </View>

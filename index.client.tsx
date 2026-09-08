@@ -1,24 +1,23 @@
-import type { PluginContext } from "@getpaseo/plugin";
+import type { PluginClientContext } from "@getpaseo/plugin/client";
 import { MathMessageView } from "./client/math-message.js";
 import { hasMath } from "./client/generated/markdown.js";
 import { mathMessageSchema } from "./shared/message.js";
-import { renderMath } from "./shared/render.js";
-import { renderFormula } from "./server/render.js";
 
-export default function setup(plugin: PluginContext) {
-  plugin.handle(renderMath, renderFormula);
+export default function setup(client: PluginClientContext) {
   const objects = new WeakMap<object, { text: string; result: boolean }>();
   // Projection may clone settled items. Bound retained source while avoiding
   // reparsing those clones on every unrelated transcript/composer update.
   const sources = new Map<string, boolean>();
   let sourceCharacters = 0;
-  plugin.addTimelineRenderer({
+  client.addTimelineRenderer({
     kind: "math-message",
     version: 1,
     schema: mathMessageSchema,
     Component: MathMessageView,
   });
-  plugin.addTimelineTransformer({
+  // Paseo 0.8 projects assembled assistant text at render time. Its phase is
+  // "complete" even while that text grows; do not use phase to gate rendering.
+  client.addTimelineTransformer({
     id: "assistant-math",
     query: { itemType: "assistant_message" },
     transform({ item }) {

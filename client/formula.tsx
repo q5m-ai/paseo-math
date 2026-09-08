@@ -1,4 +1,4 @@
-import { useRpc } from "@getpaseo/plugin";
+import { useRpc } from "@getpaseo/plugin/client";
 import { memo, useEffect, useRef, useState } from "react";
 import {
   Image,
