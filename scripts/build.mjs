@@ -9,6 +9,10 @@ const require = createRequire(import.meta.url);
 const markdownRoot = path.dirname(
   require.resolve("react-native-markdown-display/package.json"),
 );
+const markdownItEntry = path.join(
+  path.dirname(require.resolve("markdown-it/package.json")),
+  "dist/markdown-it.mjs",
+);
 await mkdir(path.join(root, "client/generated"), { recursive: true });
 await mkdir(path.join(root, "server/generated"), { recursive: true });
 
@@ -45,6 +49,18 @@ await build({
     {
       name: "stable-markdown-keys",
       setup(context) {
+        context.onLoad(
+          { filter: /markdown-it\.mjs$/ },
+          async ({ path: filename }) => {
+            if (filename !== markdownItEntry) return;
+            const source = replaceExact(
+              await readFile(filename, "utf8"),
+              "var MarkdownItCallable = callable(MarkdownIt);",
+              "var MarkdownItCallable = MarkdownIt;",
+            );
+            return { contents: source, loader: "js" };
+          },
+        );
         context.onLoad(
           { filter: /(?:AstRenderer|tokensToAST)\.js$/ },
           async ({ path: filename }) => {
