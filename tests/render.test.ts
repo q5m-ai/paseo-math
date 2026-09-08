@@ -124,6 +124,19 @@ describe("local math rasterization", () => {
     expect(second.png).toBe((await render("b")).png);
   });
 
+  it("renders standalone AMS equation tags as compact display geometry", async () => {
+    const tagged = await render(
+      String.raw`u_{2n+\varepsilon}=i^\varepsilon u_n,\qquad z_{2n+\varepsilon}=(1+i)z_n+\varepsilon u_n.\tag{1}`,
+      true,
+    );
+    const compact = await render(
+      String.raw`u_{2n+\varepsilon}=i^\varepsilon u_n,\qquad z_{2n+\varepsilon}=(1+i)z_n+\varepsilon u_n.\qquad{\text{(}1\text{)}}`,
+      true,
+    );
+    expect(tagged).toEqual(compact);
+    expect(tagged.width).toBeLessThan(600);
+  });
+
   it("applies border-free boxed presentation without changing the expression", async () => {
     const expression = String.raw`\boxed{\frac{s}{t}}`;
     const input = Object.freeze({

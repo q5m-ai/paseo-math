@@ -33,6 +33,26 @@ describe("formula request cache", () => {
     expect(peekRender(offline)).toBeNull();
   });
 
+  it("queues every formula in a full proof instead of dropping the tail", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const pending = Array.from({ length: 96 }, (_, index) => {
+      const next = { ...input, expression: `proof_${index}` };
+      return requestRender(
+        renderKey("cache-test-full-proof", next),
+        next,
+        async () => {
+          await gate;
+          return image;
+        },
+      );
+    });
+    release();
+    expect(await Promise.all(pending)).toEqual(Array(96).fill(image));
+  });
+
   it("shares pending/remounted requests and keeps newer expressions independent of late results", async () => {
     const oldKey = renderKey("cache-test-stream", input);
     const nextInput = { ...input, expression: "r+s+t" };

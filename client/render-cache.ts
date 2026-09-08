@@ -13,7 +13,10 @@ type Entry = {
 const MAX_ENTRIES = 128;
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_ACTIVE = 4;
-const MAX_QUEUED = 64;
+// A long proof can mount hundreds of formulas in one render. Keep the queue
+// bounded, but large enough that valid formulas do not permanently fall back
+// to source merely because the four RPC slots were busy during that mount.
+const MAX_QUEUED = 512;
 const entries = new Map<string, Entry>();
 const queue: Array<() => void> = [];
 let active = 0;
