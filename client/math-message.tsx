@@ -1,5 +1,5 @@
 import type { PluginTimelineItemProps } from "@getpaseo/plugin/client";
-import { copyText, useToast } from "@getpaseo/plugin/client/react-native";
+import { copyText, Icon, useToast } from "@getpaseo/plugin/client/react-native";
 import { memo, useCallback, useMemo, useState } from "react";
 import {
   Linking,
@@ -237,7 +237,7 @@ const MemoizedMathMessage = memo(
 
     return (
       <View
-        style={{ minWidth: 0, width: "100%" }}
+        style={{ minWidth: 0, width: "100%", paddingRight: 44, minHeight: 44 }}
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
       >
         <Markdown
@@ -252,22 +252,18 @@ const MemoizedMathMessage = memo(
           accessibilityRole="button"
           accessibilityLabel="Copy source"
           onPress={copySource}
-          style={{
-            alignSelf: "flex-start",
-            paddingVertical: 8,
-            paddingHorizontal: 4,
-            minHeight: 44,
+          style={({ pressed }) => ({
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 44,
+            height: 44,
+            alignItems: "center",
             justifyContent: "center",
-          }}
+            opacity: pressed ? 0.6 : 1,
+          })}
         >
-          <Text
-            style={{
-              color: colors.foregroundMuted,
-              fontSize: layout.compact ? 12 : 13,
-            }}
-          >
-            Copy source
-          </Text>
+          <Icon name="Copy" size={14} color={colors.foregroundMuted} />
         </Pressable>
       </View>
     );
