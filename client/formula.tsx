@@ -2,12 +2,14 @@ import { useRpc } from "@getpaseo/plugin/client";
 import { memo, useEffect, useRef, useState } from "react";
 import {
   Image,
+  Platform,
   ScrollView,
   Text,
   useWindowDimensions,
   type TextStyle,
 } from "react-native";
 import { renderMath } from "../shared/render.js";
+import { formulaScale } from "./formula-scale.js";
 import {
   peekRender,
   renderKey,
@@ -92,10 +94,15 @@ export const Formula = memo(function Formula({
   }
 
   const fontSize = textStyle.fontSize ?? 16;
-  const naturalScale = (fontSize / 16) * fontScale;
-  const scale = block
-    ? naturalScale
-    : Math.min(naturalScale, Math.max(1, maxInlineWidth) / result.width);
+  const scale = formulaScale({
+    fontSize,
+    fontScale,
+    block,
+    display,
+    platform: Platform.OS,
+    maxInlineWidth,
+    width: result.width,
+  });
   const width = result.width * scale;
   const height = result.height * scale;
   const descent = Math.max(0, result.height - result.baseline) * scale;

@@ -4,7 +4,9 @@ Markdown and LaTeX rendering for math-bearing assistant responses in Paseo, with
 
 ## Compatibility
 
-Use **Paseo `0.8.0-beta.1` or later in the 0.8 series on both the host daemon and the client app**. The plugin targets and is validated against Paseo `0.8.0-beta.1`.
+**Requires Paseo 0.8+ on both the host daemon and the client app; Paseo 0.7 is not supported.** The current manifest accepts `0.8.0-beta.1` and later in the 0.8 series; future minor versions are not yet declared compatible.
+
+**Device testing is limited to the macOS app and Android**, using Paseo `0.8.0-beta.1`. iPhone/iPad and browser clients have not been validated. Automated tests are not a substitute for testing those clients.
 
 Upgrading a host does not upgrade its Android, desktop, or other client apps. A Paseo `0.7.2` client cannot load the current plugin and can report:
 

@@ -62,6 +62,59 @@ function repairText(source: string): string {
   return result;
 }
 
+/**
+ * Render explicit equation tags inline with their display instead of asking
+ * MathJax for a page-width labeled equation. MathJax emits those labels as
+ * nested, CSS-sized SVGs, which cannot be safely rasterized as standalone
+ * geometry. Keep the tag's TeX payload and AMS parenthesis semantics.
+ */
+export function compactEquationTags(expression: string): string {
+  let result = "";
+  let copied = 0;
+  for (let i = 0; i < expression.length; i++) {
+    if (expression[i] === "%") {
+      const newline = expression.indexOf("\n", i + 1);
+      i = newline < 0 ? expression.length : newline;
+      continue;
+    }
+    if (expression[i] !== "\\") continue;
+    const end = commandEnd(expression, i);
+    const command = expression.slice(i + 1, end);
+    if (command === "verb") {
+      i = verbEnd(expression, end) - 1;
+      continue;
+    }
+    if (command !== "tag") {
+      i = Math.max(i + 1, end - 1);
+      continue;
+    }
+    let start = end;
+    while (/\s/.test(expression[start] ?? "") && start < expression.length)
+      start++;
+    const starred = expression[start] === "*";
+    if (starred) {
+      start++;
+      while (/\s/.test(expression[start] ?? "") && start < expression.length)
+        start++;
+    }
+    if (expression[start] !== "{") {
+      i = end - 1;
+      continue;
+    }
+    const close = balancedEnd(expression, start);
+    if (close < 0) break;
+    const tag = expression.slice(start + 1, close - 1);
+    result +=
+      expression.slice(copied, i) +
+      (starred
+        ? `\\qquad{${tag}}`
+        : `\\qquad{\\text{(}${tag}\\text{)}}`);
+    copied = close;
+    i = close - 1;
+  }
+  return copied === 0 ? expression : result + expression.slice(copied);
+}
+
 /** Repair human text percentages without changing TeX comments or verbatim. */
 export function normalizeTex(expression: string): string {
   let result = "";

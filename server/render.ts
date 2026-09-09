@@ -8,13 +8,14 @@ import type { LiteElement } from "mathjax-full/js/adaptors/lite/Element.js";
 import type { MmlNode } from "mathjax-full/js/core/MmlTree/MmlNode.js";
 import type TexError from "mathjax-full/js/input/tex/TexError.js";
 import "mathjax-full/js/input/tex/ams/AmsConfiguration.js";
+import "mathjax-full/js/input/tex/boldsymbol/BoldsymbolConfiguration.js";
 import "mathjax-full/js/input/tex/newcommand/NewcommandConfiguration.js";
 import "mathjax-full/js/input/tex/configmacros/ConfigMacrosConfiguration.js";
 import "mathjax-full/js/input/tex/verb/VerbConfiguration.js";
 import "mathjax-full/js/input/tex/color/ColorConfiguration.js";
 import "mathjax-full/js/input/tex/textmacros/TextMacrosConfiguration.js";
 import type { RenderInput, RenderOutput } from "../shared/render.js";
-import { normalizeTex } from "../shared/tex.js";
+import { compactEquationTags, normalizeTex } from "../shared/tex.js";
 import { wasmBase64 } from "./generated/wasm.js";
 
 const EM = 16;
@@ -136,6 +137,7 @@ function typeset(input: RenderInput): {
     packages: [
       "base",
       "ams",
+      "boldsymbol",
       "newcommand",
       "configmacros",
       "verb",
@@ -180,8 +182,11 @@ function typeset(input: RenderInput): {
   });
   try {
     // Initialize the TeX color environment too: \rule otherwise bakes in black.
+    const expression = input.display
+      ? compactEquationTags(input.expression)
+      : input.expression;
     const container = document.convert(
-      `\\color{${color.rgb}} ${normalizeTex(input.expression)}`,
+      `\\color{${color.rgb}} ${normalizeTex(expression)}`,
       {
         display: input.display,
         em: EM,

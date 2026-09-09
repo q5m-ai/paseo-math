@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import MarkdownIt from "markdown-it";
 import type { Token } from "markdown-it";
 import { hasMath, markdownMath } from "../shared/markdown-math.js";
-import { normalizeTex } from "../shared/tex.js";
+import { compactEquationTags, normalizeTex } from "../shared/tex.js";
 
 function parse(source: string): Token[] {
   const tokens: Token[] = [];
@@ -221,6 +221,24 @@ describe("raw-source math within Markdown", () => {
     expect(hasMath("~~~math\nx+y\n~~~")).toBe(true);
     expect(hasMath("$" + "x".repeat(4097) + "$")).toBe(false);
     expect(hasMath("x".repeat(65_536) + " $u$")).toBe(false);
+  });
+});
+
+describe("standalone equation tags", () => {
+  it("compacts numbered and custom display tags without touching literal TeX", () => {
+    expect(
+      compactEquationTags(
+        String.raw`x=y\tag{7} + z\tag*{\dagger} + \verb|\tag{hidden}|`,
+      ),
+    ).toBe(
+      String.raw`x=y\qquad{\text{(}7\text{)}} + z\qquad{\dagger} + \verb|\tag{hidden}|`,
+    );
+    expect(compactEquationTags("x % \\tag{hidden}\n+y")).toBe(
+      "x % \\tag{hidden}\n+y",
+    );
+    expect(compactEquationTags(String.raw`x\tag{unfinished`)).toBe(
+      String.raw`x\tag{unfinished`,
+    );
   });
 });
 

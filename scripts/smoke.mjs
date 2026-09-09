@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { build } from "esbuild";
+import { transformSync } from "@babel/core";
 import MarkdownIt from "markdown-it";
 import * as sdk from "../.paseo-sdk/packages/plugin/dist/index.js";
 import * as clientSdk from "../.paseo-sdk/packages/plugin/dist/client/index.js";
@@ -112,8 +113,13 @@ async function exerciseClientBundle(bundle, id) {
     if (name === "@getpaseo/plugin/client") return clientSdk;
     if (name === "@getpaseo/plugin/client/react-native") return nativeSdk;
     if (name === "react-native") return require("react-native-web");
-    if (name === "react" || name === "react/jsx-runtime" || name === "zod")
-      return require(name);
+    if (name === "react") {
+      const react = require("react");
+      // Metro exposes this namespace shape to evaluated Android plugin bundles.
+      // Legacy CommonJS dependencies must tolerate Component under default.
+      return { ...react, Component: undefined, default: react };
+    }
+    if (name === "react/jsx-runtime" || name === "zod") return require(name);
     throw new Error(`Module "${name}" is not available in this client smoke`);
   });
   const cleanup = entry.default({
@@ -273,6 +279,14 @@ async function exerciseClientBundle(bundle, id) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const plugin = await loadCompiledPlugin();
   try {
+    // Also enforce this in ordinary CI, where a Hermes executable is optional.
+    transformSync(plugin.bundles.clientBundle, {
+      babelrc: false,
+      configFile: false,
+      plugins: [{ visitor: { Class(node) {
+        throw node.buildCodeFrameError("Client classes must be lowered before Hermes eval");
+      } } }],
+    });
     const streaming = await exerciseClientBundle(
       plugin.bundles.clientBundle,
       plugin.id,

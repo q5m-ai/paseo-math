@@ -1,9 +1,11 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
-import { MathMessageView } from "./client/math-message.js";
-import { hasMath } from "./client/generated/markdown.js";
-import { mathMessageSchema } from "./shared/message.js";
 
-export default function setup(client: PluginClientContext) {
+function setupPlugin(client: PluginClientContext) {
+  // Keep client dependencies lazy so an Android evaluation failure includes the
+  // dependency stack in the plugin status instead of only its final message.
+  const { MathMessageView } = require("./client/math-message.js") as typeof import("./client/math-message.js");
+  const { hasMath } = require("./client/generated/markdown.js") as typeof import("./client/generated/markdown.js");
+  const { mathMessageSchema } = require("./shared/message.js") as typeof import("./shared/message.js");
   const objects = new WeakMap<object, { text: string; result: boolean }>();
   // Projection may clone settled items. Bound retained source while avoiding
   // reparsing those clones on every unrelated transcript/composer update.
@@ -43,7 +45,7 @@ export default function setup(client: PluginClientContext) {
       return {
         items: [
           {
-            type: "plugin",
+            type: "plugin" as const,
             kind: "math-message",
             version: 1,
             data: { text: item.text },
@@ -56,4 +58,14 @@ export default function setup(client: PluginClientContext) {
     sources.clear();
     sourceCharacters = 0;
   };
+}
+
+export default function setup(client: PluginClientContext) {
+  try {
+    return setupPlugin(client);
+  } catch (error) {
+    const detail =
+      error instanceof Error ? (error.stack ?? error.message) : String(error);
+    throw new Error(`q5m-math client initialization failed:\n${detail}`);
+  }
 }
