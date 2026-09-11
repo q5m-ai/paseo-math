@@ -225,13 +225,38 @@ describe("raw-source math within Markdown", () => {
 });
 
 describe("standalone equation tags", () => {
+  it("places leading, middle, and grouped tags after the display", () => {
+    for (const tex of [String.raw`\tag{1}x=y`, String.raw`x\tag{1}=y`]) {
+      expect(compactEquationTags(tex)).toBe(String.raw`x=y\qquad{\text{(}1\text{)}}`);
+    }
+    expect(compactEquationTags(String.raw`{x\tag*{A}}=y`)).toBe(
+      String.raw`{x}=y\qquad{A}`,
+    );
+    expect(compactEquationTags("\\tag{1}x=y % comment")).toBe(
+      "x=y % comment\n\\qquad{\\text{(}1\\text{)}}",
+    );
+  });
+
+  it("places labels at their AMS row ends without splitting nested matrices", () => {
+    expect(compactEquationTags(
+      String.raw`\begin{align}\tag{1}x&=\begin{matrix}a\\b\end{matrix}\\[2pt]u\tag*{B}&=v\end{align}`,
+    )).toBe(
+      String.raw`\begin{align}x&=\begin{matrix}a\\b\end{matrix}\qquad{\text{(}1\text{)}}\\[2pt]u&=v\qquad{B}\end{align}`,
+    );
+    expect(compactEquationTags(
+      String.raw`\begin{equation}\tag{2}\begin{split}x&=y\\&=z\end{split}\end{equation}`,
+    )).toBe(
+      String.raw`\begin{equation}\begin{split}x&=y\\&=z\end{split}\qquad{\text{(}2\text{)}}\end{equation}`,
+    );
+  });
+
   it("compacts numbered and custom display tags without touching literal TeX", () => {
     expect(
       compactEquationTags(
         String.raw`x=y\tag{7} + z\tag*{\dagger} + \verb|\tag{hidden}|`,
       ),
     ).toBe(
-      String.raw`x=y\qquad{\text{(}7\text{)}} + z\qquad{\dagger} + \verb|\tag{hidden}|`,
+      String.raw`x=y + z + \verb|\tag{hidden}|\qquad{\text{(}7\text{)}}\qquad{\dagger}`,
     );
     expect(compactEquationTags("x % \\tag{hidden}\n+y")).toBe(
       "x % \\tag{hidden}\n+y",

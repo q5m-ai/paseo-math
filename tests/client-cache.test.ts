@@ -53,6 +53,40 @@ describe("formula request cache", () => {
     expect(await Promise.all(pending)).toEqual(Array(96).fill(image));
   });
 
+  it("retains completed renders while more than 128 formulas remain pending", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    let calls = 0;
+    const firstInput = { ...input, expression: "large-proof-0" };
+    const firstKey = renderKey("cache-test-large-proof", firstInput);
+    const pending = Array.from({ length: 200 }, (_, index) => {
+      const next = { ...input, expression: `large-proof-${index}` };
+      return requestRender(renderKey("cache-test-large-proof", next), next, async () => {
+        calls++;
+        if (index !== 0) await gate;
+        return image;
+      });
+    });
+    try {
+      await pending[0];
+      expect(peekRender(firstKey)).toEqual(image);
+      expect(requestRender(firstKey, firstInput, async () => {
+        throw new Error("Duplicate remount RPC");
+      })).toBe(pending[0]);
+    } finally {
+      release();
+      await Promise.all(pending);
+    }
+    expect(calls).toBe(200);
+    const retained = Array.from({ length: 200 }, (_, index) => {
+      const next = { ...input, expression: `large-proof-${index}` };
+      return peekRender(renderKey("cache-test-large-proof", next));
+    }).filter((result) => result !== undefined);
+    expect(retained).toHaveLength(128); // completed LRU is still bounded
+    const last = { ...input, expression: "large-proof-199" };
+    expect(peekRender(renderKey("cache-test-large-proof", last))).toEqual(image);
+  });
+
   it("shares pending/remounted requests and keeps newer expressions independent of late results", async () => {
     const oldKey = renderKey("cache-test-stream", input);
     const nextInput = { ...input, expression: "r+s+t" };

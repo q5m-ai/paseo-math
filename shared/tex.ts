@@ -71,9 +71,29 @@ function repairText(source: string): string {
 export function compactEquationTags(expression: string): string {
   let result = "";
   let copied = 0;
+  type Scope = { tags: string; rows: boolean; depth: number };
+  const root: Scope = { tags: "", rows: false, depth: 0 };
+  const environments: Array<{ name: string; scope?: Scope }> = [];
+  let depth = 0;
+  let trailingComment = false;
+  const scope = () => {
+    for (let j = environments.length - 1; j >= 0; j--) {
+      if (environments[j].scope) return environments[j].scope!;
+    }
+    return root;
+  };
+  const flush = (target: Scope, position: number) => {
+    result += expression.slice(copied, position) +
+      (trailingComment && target.tags ? "\n" : "") + target.tags;
+    target.tags = "";
+    copied = position;
+  };
   for (let i = 0; i < expression.length; i++) {
+    if (expression[i] === "{") depth++;
+    if (expression[i] === "}") depth--;
     if (expression[i] === "%") {
       const newline = expression.indexOf("\n", i + 1);
+      trailingComment = newline < 0;
       i = newline < 0 ? expression.length : newline;
       continue;
     }
@@ -84,6 +104,31 @@ export function compactEquationTags(expression: string): string {
       i = verbEnd(expression, end) - 1;
       continue;
     }
+    // AMS labels belong to the enclosing equation/row, not their lexical
+    // position. Nested matrices and split/aligned rows must not flush them.
+    if (command === "begin" || command === "end") {
+      const match = /^\s*\{([A-Za-z]+\*?)\}/.exec(expression.slice(end));
+      if (match) {
+        const name = match[1];
+        if (command === "begin") {
+          const rows = /^(align|alignat|flalign|gather)\*?$/.test(name);
+          environments.push({
+            name,
+            scope: rows || /^(equation|multline)\*?$/.test(name)
+              ? { tags: "", rows, depth }
+              : undefined,
+          });
+        } else if (environments[environments.length - 1]?.name === name) {
+          const closing = environments.pop();
+          if (closing?.scope) flush(closing.scope, i);
+        }
+        i = end + match[0].length - 1;
+        continue;
+      }
+    }
+    const current = environments[environments.length - 1]?.scope;
+    if (expression[end] === "\\" && end === i + 1 &&
+        current?.rows && depth === current.depth) flush(current, i);
     if (command !== "tag") {
       i = Math.max(i + 1, end - 1);
       continue;
@@ -104,15 +149,16 @@ export function compactEquationTags(expression: string): string {
     const close = balancedEnd(expression, start);
     if (close < 0) break;
     const tag = expression.slice(start + 1, close - 1);
-    result +=
-      expression.slice(copied, i) +
-      (starred
-        ? `\\qquad{${tag}}`
-        : `\\qquad{\\text{(}${tag}\\text{)}}`);
+    result += expression.slice(copied, i);
+    scope().tags += starred
+      ? `\\qquad{${tag}}`
+      : `\\qquad{\\text{(}${tag}\\text{)}}`;
     copied = close;
     i = close - 1;
   }
-  return copied === 0 ? expression : result + expression.slice(copied);
+  if (environments.length || depth !== 0) return expression;
+  flush(root, expression.length);
+  return result;
 }
 
 /** Repair human text percentages without changing TeX comments or verbatim. */

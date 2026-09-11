@@ -1,6 +1,6 @@
 {
   "name": "@q5m-ai/paseo-math",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0",
   "private": true,
   "description": "Cross-platform Markdown and LaTeX rendering for Paseo 0.8",
   "type": "module",
@@ -29,7 +29,7 @@
   "devDependencies": {
     "@babel/core": "7.29.0",
     "@babel/plugin-transform-classes": "7.28.6",
-    "@getpaseo/plugin": "0.8.0-beta.1",
+    "@getpaseo/plugin": "0.8.0",
     "@types/node": "^22.0.0",
     "@types/react": "~19.2.0",
     "esbuild": "^0.25.0",

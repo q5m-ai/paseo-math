@@ -154,6 +154,19 @@ f(\mathbf x)
     expect(tagged.width).toBeLessThan(600);
   });
 
+  it("rasterizes leading and middle tags as trailing display and row labels", async () => {
+    for (const expression of [String.raw`\tag{1}x=y`, String.raw`x\tag{1}=y`]) {
+      expect(await render(expression, true)).toEqual(
+        await render(String.raw`x=y\qquad{\text{(}1\text{)}}`, true),
+      );
+    }
+    expect(await render(
+      String.raw`\begin{align}\tag{1}x&=y\\u\tag*{B}&=v\end{align}`, true,
+    )).toEqual(await render(
+      String.raw`\begin{align}x&=y\qquad{\text{(}1\text{)}}\\u&=v\qquad{B}\end{align}`, true,
+    ));
+  });
+
   it("applies border-free boxed presentation without changing the expression", async () => {
     const expression = String.raw`\boxed{\frac{s}{t}}`;
     const input = Object.freeze({

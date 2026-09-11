@@ -328,7 +328,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     assert.equal(invalid.ok, false);
     console.log(
       JSON.stringify({
-        compiler: "released Paseo 0.8.0-beta.1 runtime-entry compiler",
+        compiler: "released Paseo 0.8.0 runtime-entry compiler",
         manifest: "accepted by released strict manifest reader",
         client:
           "compiled client entry in registration harness (not UI rendering)",
