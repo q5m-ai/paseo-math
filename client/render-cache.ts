@@ -21,6 +21,7 @@ const entries = new Map<string, Entry>();
 const queue: Array<() => void> = [];
 let active = 0;
 let bytes = 0;
+let completed = 0;
 
 export function renderKey(hostId: string, input: RenderInput): string {
   return JSON.stringify([hostId, input.expression, input.display, input.color]);
@@ -28,7 +29,10 @@ export function renderKey(hostId: string, input: RenderInput): string {
 
 function remove(key: string, entry: Entry): void {
   entries.delete(key);
-  bytes -= entry.bytes;
+  if (entry.result !== undefined) {
+    completed--;
+    bytes -= entry.bytes;
+  }
 }
 
 function get(key: string): Entry | undefined {
@@ -45,7 +49,7 @@ function get(key: string): Entry | undefined {
 
 function trim(): void {
   for (const [key, entry] of entries) {
-    if (entries.size <= MAX_ENTRIES && bytes <= MAX_BYTES) break;
+    if (completed <= MAX_ENTRIES && bytes <= MAX_BYTES) break;
     // Never evict in-flight work: remounts must share the same request.
     if (entry.result !== undefined) remove(key, entry);
   }
@@ -75,8 +79,7 @@ export function requestRender(
     expires: Infinity,
   };
   entries.set(key, entry);
-  bytes += entry.bytes;
-  trim();
+  // Pending work has its own active/queue bounds, not completed-cache capacity.
 
   const run = () => {
     active++;
@@ -94,7 +97,8 @@ export function requestRender(
     entry.expires = result === null ? Date.now() + 30_000 : Infinity;
     const added = result?.ok ? result.png.length * 2 : 0;
     entry.bytes += added;
-    bytes += added;
+    completed++;
+    bytes += entry.bytes;
     active--;
     trim();
     resolve(result);
