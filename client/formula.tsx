@@ -5,8 +5,10 @@ import {
   Platform,
   ScrollView,
   Text,
+  View,
   useWindowDimensions,
   type TextStyle,
+  type ViewStyle,
 } from "react-native";
 import { renderMath } from "../shared/render.js";
 import { formulaScale } from "./formula-scale.js";
@@ -135,6 +137,25 @@ export const Formula = memo(function Formula({
       >
         {image}
       </ScrollView>
+    );
+  }
+
+  // React Native Web renders Image as a div, so a nested Text span would create
+  // invalid span/div HTML. An inline-flex View keeps valid paragraph structure
+  // and reserves the transformed descender so wrapped lines cannot overlap it.
+  if (Platform.OS === "web") {
+    return (
+      <View
+        style={{
+          // React Native Web supports inline-flex although RN's shared type omits it.
+          display: "inline-flex" as ViewStyle["display"],
+          flexShrink: 0,
+          width,
+          height: height + descent,
+        }}
+      >
+        {image}
+      </View>
     );
   }
 
