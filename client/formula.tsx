@@ -138,6 +138,11 @@ export const Formula = memo(function Formula({
     );
   }
 
+  // React Native Web renders Image as an inline-flex div. Wrapping it in a
+  // nested Text span creates invalid span/div HTML and leaves raw TeX visible.
+  // The Markdown paragraph already provides the web text container.
+  if (Platform.OS === "web") return image;
+
   // Native inline images occupy a text attachment ending at the baseline.
   // Shift its descender below that baseline, reserving enough line height for
   // both the attachment and descender instead of clipping tall fractions.
