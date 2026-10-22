@@ -78,6 +78,7 @@ function discover(
   const probe = new state.md.inline.State(source, state.md, state.env, []);
   const protectedAt = new Uint8Array(source.length);
   const positions = new Map<number, number>();
+  const codeMath = new Map<number, number>();
   const rules = state.md.inline.ruler.getRules("");
   probing.depth++;
   try {
@@ -106,6 +107,21 @@ function discover(
           type === "html_inline"
         ) {
           protectedAt.fill(1, start, probe.pos);
+          // GitHub's $`TeX`$ syntax explicitly opts a single-backtick code
+          // span into math. Keep every other code span protected, including
+          // code containing dollar delimiters and multi-backtick literals.
+          if (
+            type === "code_inline" &&
+            source[start] === "`" &&
+            source[start + 1] !== "`" &&
+            source[probe.pos - 2] !== "`" &&
+            source[start - 1] === "$" &&
+            source[start - 2] !== "$" &&
+            !escaped(source, start - 1) &&
+            source[probe.pos] === "$" &&
+            source[probe.pos + 1] !== "$"
+          )
+            codeMath.set(start - 1, probe.pos);
           break;
         }
       }
@@ -129,7 +145,14 @@ function discover(
 
   const markers: Marker[] = [];
   for (let i = 0; i < source.length; i++) {
-    if (protectedAt[i]) {
+    const codeClose = codeMath.get(i);
+    if (codeClose !== undefined) {
+      markers.push({ pos: i, text: "boundary" });
+      markers.push({ pos: i, text: "$`" });
+      markers.push({ pos: codeClose - 1, text: "`$" });
+      markers.push({ pos: codeClose, text: "boundary" });
+      i = codeClose;
+    } else if (protectedAt[i]) {
       markers.push({ pos: i, text: "boundary" });
       while (i + 1 < source.length && protectedAt[i + 1]) i++;
     } else if (source[i] === "\n") markers.push({ pos: i, text: "newline" });
@@ -162,7 +185,9 @@ function discover(
         ? "\\)"
         : marker.text === "\\["
           ? "\\]"
-          : marker.text;
+          : marker.text === "$`"
+            ? "`$"
+            : marker.text;
     closing[i] = next.get(target) ?? -1;
     next.set(marker.text, i);
   }
@@ -172,7 +197,7 @@ function discover(
     const marker = markers[i];
     if (
       marker.pos < consumed ||
-      !["$", "$$", "\\(", "\\["].includes(marker.text)
+      !["$", "$$", "$`", "\\(", "\\["].includes(marker.text)
     )
       continue;
     const endMarker = markers[closing[i]];
@@ -186,6 +211,7 @@ function discover(
     };
     const body = source.slice(candidate.body, candidate.close);
     if (!body.trim() || body.length > MAX_EXPRESSION) continue;
+    if (marker.text === "$`" && /\n/.test(body)) continue;
     if (
       marker.text === "$" &&
       (/^\s|\s$/.test(body) || currency(source, candidate))

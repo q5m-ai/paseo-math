@@ -41,6 +41,46 @@ describe("raw-source math within Markdown", () => {
     ).toHaveLength(1);
   });
 
+  it("renders GitHub backtick-delimited inline math from the causal-set response", () => {
+    const source = [
+      "In a causal set $`(C,\\prec)`$, let:",
+      "- $`s`$: an idealized supernova emission event;",
+      "- $`e_1,e_2`$: detection events on Earth;",
+      "- $`x\\prec y`$: “$`x`$ causally precedes $`y`$.”",
+      "",
+      "```math",
+      String.raw`s\prec e_1,\qquad s\prec e_2,\qquad e_1\prec e_2.`,
+      "```",
+      "",
+      "Transitivity gives $`s\\prec e_2`$ from $`s\\prec e_1\\prec e_2`$.",
+    ].join("\n");
+    expect(expressions(source)).toEqual([
+      String.raw`(C,\prec)`, "s", "e_1,e_2", String.raw`x\prec y`, "x", "y",
+      String.raw`s\prec e_1,\qquad s\prec e_2,\qquad e_1\prec e_2.` + "\n",
+      String.raw`s\prec e_2`, String.raw`s\prec e_1\prec e_2`,
+    ]);
+    expect(parse(source).filter((token) => token.type === "code_inline")).toEqual([]);
+    expect(formulas(source)[0].meta).toEqual({
+      source: "$`(C,\\prec)`$", display: false,
+    });
+    expect(hasMath("$`s`$")).toBe(true);
+  });
+
+  it("keeps GitHub math atomic while preserving code, links, and streaming fallbacks", () => {
+    expect(expressions("**$`a_*b`$** and $c$ then $`d`$.")).toEqual(["a_*b", "c", "d"]);
+    expect(expressions("$unfinished $`x`$ then $y$")).toEqual(["x", "y"]);
+    expect(expressions("$`a$b`$ and $z$")).toEqual(["a$b", "z"]);
+    for (const source of [
+      "`$x$`", "`$`x`$`", "$``x``$", "\\$`x`$", "$`x`", "$`x",
+      "$`x\ny`$", "[label](https://example.org/$`x`$)",
+      "```text\n$`x`$\n```", "    $`x`$",
+    ]) {
+      expect(expressions(source), source).toEqual([]);
+      expect(hasMath(source), source).toBe(false);
+    }
+    expect(hasMath("$`" + "x".repeat(4097) + "`$")).toBe(false);
+  });
+
   it("accepts genuinely numeric TeX instead of an operator allowlist", () => {
     expect(
       expressions(

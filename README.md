@@ -52,7 +52,7 @@ For a reproducible install, replace `main` in the install command with an exact 
 
 ## Writing math
 
-Use `\(...\)` for inline math and `\[...\]` or `$$...$$` for display math. Ask the agent to return Markdown with LaTeX, **without wrapping its response in a code fence**; code remains literal.
+Use `\(...\)`, `$...$`, or GitHub-style `` $`...`$ `` for inline math and `\[...\]` or `$$...$$` for display math. Ask the agent to return Markdown with LaTeX, **without wrapping its response in a code fence**; ordinary code spans and non-math code fences remain literal.
 
 For example, ask:
 
@@ -132,6 +132,10 @@ $$
 $$
 i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
 $$
+
+## Development dependencies
+
+`npm ci` and `npm run build` prepare the portable client bundle before typechecking or testing. `react-native-markdown-display` is a build dependency: `scripts/build.mjs` bundles its renderer and Markdown parser into the generated client asset, while Paseo supplies React and React Native at runtime. Keep the renderer's Markdown-it override aligned with the patched direct dependency. The production audit (`npm audit --omit=dev --audit-level=moderate`) covers the installed runtime dependency graph, not the development toolchain or generated bundle contents.
 
 ## Copying and rendering limits
 
