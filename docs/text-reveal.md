@@ -2,7 +2,7 @@
 
 `client/use-revealed-text.ts` provides a plugin-owned `useRevealedText(text,
 phase)` hook. It does not import a host UI module or depend on a timeline schema.
-This PR supplies the helper only: the existing math renderer is unchanged.
+The math renderer (`client/math-message.tsx`) uses it.
 
 Paseo 0.11.2 exposed `useRevealedText` through
 `@getpaseo/plugin/client/react-native`. Paseo 0.13.0-beta.1 redirects that module
@@ -39,11 +39,6 @@ const visibleText = useRevealedText(sourceText, phase);
 Render `visibleText` and keep copy/export actions tied to `sourceText`. Do not
 also import the identically named host hook. Call the hook unconditionally, as
 with any React hook.
-
-PR #7 supplies the math timeline phase and the renderer integration. After this
-helper lands, #7 must switch its hook import to the local module; merely updating
-its branch from `main` does not rewrite that import. Its timeline schema, item
-version, SDK pin and host requirement changes are deliberately not included here.
 
 The local implementation was exercised on n03 while testing #7 with a 0.13 beta
 client. This is not a claim that every client/version has been device-tested.

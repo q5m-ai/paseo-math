@@ -64,7 +64,7 @@ export function computeRevealStep(input: {
 const ZERO_WIDTH_JOINER = 0x200d;
 
 const graphemeSegmenter =
-  typeof Intl.Segmenter === "function"
+  typeof Intl !== "undefined" && typeof Intl.Segmenter === "function"
     ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
     : null;
 

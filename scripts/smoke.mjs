@@ -148,7 +148,10 @@ async function exerciseClientBundle(bundle, id) {
           candidate.kind === row.itemKind && candidate.version === row.version,
       );
       assert.ok(renderer, "Projected math must have a registered renderer");
-      assert.deepEqual(renderer.schema.parse(row.data), { text });
+      assert.equal(row.version, 2);
+      const data = renderer.schema.parse(row.data);
+      assert.equal(data.text, text);
+      assert.ok(["streaming", "complete"].includes(data.phase));
     }
     function stream(text, check) {
       let state = { tail: [], head: [] };

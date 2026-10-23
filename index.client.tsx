@@ -13,16 +13,15 @@ function setupPlugin(client: PluginClientContext) {
   let sourceCharacters = 0;
   client.addTimelineRenderer({
     kind: "math-message",
-    version: 1,
+    version: 2,
     schema: mathMessageSchema,
     Component: MathMessageView,
   });
-  // Paseo 0.8 projects assembled assistant text at render time. Its phase is
-  // "complete" even while that text grows; do not use phase to gate rendering.
+  // Carry the phase so the renderer can pace streamed text.
   client.addTimelineTransformer({
     id: "assistant-math",
     query: { itemType: "assistant_message" },
-    transform({ item }) {
+    transform({ item, phase }) {
       const remembered = objects.get(item);
       let result =
         remembered?.text === item.text
@@ -47,8 +46,8 @@ function setupPlugin(client: PluginClientContext) {
           {
             type: "plugin" as const,
             kind: "math-message",
-            version: 1,
-            data: { text: item.text },
+            version: 2,
+            data: { text: item.text, phase },
           },
         ],
       };
